@@ -1,11 +1,13 @@
 package cmd
 
 import (
+	"fmt"
 	"github.com/HamzaZo/helm-adopt/internal/discovery"
 	"github.com/HamzaZo/helm-adopt/internal/generate"
 	"github.com/HamzaZo/helm-adopt/internal/utils"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
+	"helm.sh/helm/v3/cmd/helm/require"
 	"io"
 )
 
@@ -22,10 +24,26 @@ type EnvSettings struct {
 	Namespace      string
 }
 
+const basicExample = `
+Adopt k8s resources into a new helm chart 
+
+Examples:
+	
+    $ %[1]s adopt resources deployments:nginx services:my-svc -r/--release RELEASE-NAME -o/--output frontend
+
+    $ %[1]s adopt resources deployments:nginx clusterrolebindings:binding-rbac -r/--release RELEASE-NAME -o/--output frontend -n/--namespace <ns>
+
+    $ %[1]s adopt resources statefulsets:nginx services:my-svc -r/--release RELEASE-NAME -o/--output frontend -c/--kube-context <ctx>
+
+    $ %[1]s adopt resources deployments:nginx services:my-svc -r/--release RELEASE-NAME -o/--output frontend -k/--kubeconfig <kcfg>
+`
+
 func NewResourcesCmd(_ io.Writer) *cobra.Command {
 	cmd := &cobra.Command{
 		Use: "resources <pluralKind>:<name>",
-		Short: "adopt k8s resources into a helm chart",
+		Short: "adopt k8s resources into a generated helm chart",
+		Long: fmt.Sprintf(basicExample, "helm"),
+		Args:  require.MinimumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			err := runResources(args)
 			if err != nil{
@@ -38,7 +56,9 @@ func NewResourcesCmd(_ io.Writer) *cobra.Command {
 	flags := cmd.Flags()
 
 	flags.StringVarP(&chartDir, "output", "o", "", "Specify the chart directory of loaded yaml files")
+	cmd.MarkFlagRequired("output")
 	flags.StringVarP(&releaseName, "release", "r", "", "Specify the name for the generated release")
+	cmd.MarkFlagRequired("release")
 	flags.BoolVar(&dryRun, "dry-run", false, "print what resources will be adopted ")
 	flags.BoolVar(&debug, "debug", false, "show the generated manifests on STDOUT")
 
@@ -55,6 +75,7 @@ func (e *EnvSettings) AddFlags(fs *pflag.FlagSet) {
 
 }
 
+//TODO add required flags
 
 func runResources(args []string) error{
 	err := utils.ChartValidator(chartDir,releaseName)
