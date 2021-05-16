@@ -11,9 +11,9 @@ import (
 	"helm.sh/helm/v3/pkg/storage"
 	"helm.sh/helm/v3/pkg/storage/driver"
 	helmtime "helm.sh/helm/v3/pkg/time"
+	"io"
 	"os"
 	"path/filepath"
-
 )
 
 const (
@@ -43,41 +43,45 @@ type defaulter []struct {
 }
 
 
-func (c Chart) Generate(t *discovery.ApiClient) error{
+func (c Chart) Generate(client *discovery.ApiClient, out io.Writer, dryRun, debug bool) error{
+	log.Infof("Generating chart %s\n", c.ChartName)
+
+	if dryRun {
+		log.Info("Adopting Resources on Dry-run mode..")
+		for n := range c.Content {
+			log.Infof("Added resouce as file %s into %s chart", n, c.ChartName)
+		}
+		log.Infof("Chart %s will be released as %v.1", c.ChartName, c.ReleaseName )
+		return nil
+	}
 	name, err := utils.CreateChartDirectory(c.ChartName)
 	if err != nil {
 		return err
 	}
+	utils.DebugPrinter("CHART PATH: %s", debug, out ,name)
 	if err = os.MkdirAll(filepath.Join(name, ChartsDir), utils.DefaultPermission); err != nil {
 		return err
 	}
 
-	err = populateDefaults(c.ChartName, name)
+	err = populateDefaults(c.ChartName, name, out)
 	if err != nil {
 		return err
 	}
 
-	for n, rs := range c.Content {
-		templateDir := filepath.Join(name, TemplatesDir)
-		if _, err := os.Stat(filepath.Join(templateDir, n + ".yaml")); err == nil {
-			fmt.Fprintf(os.Stderr, "Warning: File %q already exist", name)
+	templateDir := filepath.Join(name, TemplatesDir)
+
+
+	for n, ct := range c.Content {
+		if _, err = os.Stat(filepath.Join(templateDir, n + ".yaml")); err == nil {
+			fmt.Fprintf(out, "WARNING: File %q already exists Overwriting.\n", name)
 		}
-		if err := utils.WriteToFile(rs, filepath.Join(templateDir, n + ".yaml")); err != nil {
+		if err := utils.WriteToFile(ct, filepath.Join(templateDir, n + ".yaml")); err != nil {
 			return err
 		}
+		log.Infof("Added resouce as file %s into %s chart", n, c.ChartName)
 	}
 
-	manifest, templates := c.addTemplates()
-	rel, err := c.buildRelease(templates, manifest, t.Namespace)
-	if err != nil {
-		return err
-	}
-	sec := driver.NewSecrets(t.ClientSet.CoreV1().Secrets(t.Namespace))
-	sec.Log = func(format string, v ...interface{}) {
-		log.Debug(fmt.Sprintf(format,v))
-	}
-	releases := storage.Init(sec)
-	err = releases.Create(rel)
+	err = c.createRelease(client, debug, out)
 	if err != nil {
 		return err
 	}
@@ -85,6 +89,33 @@ func (c Chart) Generate(t *discovery.ApiClient) error{
 	return nil
 }
 
+func (c Chart) createRelease(client *discovery.ApiClient, debug bool, out io.Writer) error{
+	manifest, templates := c.addTemplates()
+	rel, err := c.buildRelease(templates, manifest, client.Namespace)
+	if err != nil {
+		return err
+	}
+	sec := driver.NewSecrets(client.ClientSet.CoreV1().Secrets(client.Namespace))
+	sec.Log = func(format string, v ...interface{}) {
+		log.Debug(fmt.Sprintf(format,v))
+	}
+
+	releases := storage.Init(sec)
+
+	err = releases.Create(rel)
+	if err != nil {
+		return err
+	}
+	log.Infof("Chart %s is released as %v.1", c.ChartName, c.ReleaseName )
+
+	if debug {
+		utils.DebugPrinter("Adopting %v resource(s) into %s chart:", debug, out, len(templates), c.ChartName)
+		utils.DebugPrinter("MANIFEST:", debug, out)
+		fmt.Fprint(out, manifest)
+	}
+
+	return nil
+}
 
 
 func (c Chart) buildRelease(template []*chart.File, manifest, namespace string) (*release.Release, error){
@@ -94,7 +125,7 @@ func (c Chart) buildRelease(template []*chart.File, manifest, namespace string) 
 		return nil, err
 	}
 
-	fChart := &chart.Chart{
+	ch := &chart.Chart{
 		Metadata: chartFile,
 		Templates: template,
 	}
@@ -102,13 +133,13 @@ func (c Chart) buildRelease(template []*chart.File, manifest, namespace string) 
 		FirstDeployed: helmtime.Now(),
 		LastDeployed: helmtime.Now(),
 		Status: release.StatusDeployed,
-		Description: "commander release",
+		Description: "adopt k8s resources into helm chart",
 	}
 
 	rels := &release.Release{
 		Name: c.ReleaseName,
 		Info: info,
-		Chart: fChart,
+		Chart: ch,
 		Manifest: manifest,
 		Version: 1,
 		Namespace: namespace,
@@ -117,8 +148,6 @@ func (c Chart) buildRelease(template []*chart.File, manifest, namespace string) 
 	return rels, err
 
 }
-
-
 
 func (c Chart) addTemplates() (string, []*chart.File) {
 	var templates []*chart.File
@@ -137,19 +166,19 @@ func (c Chart) addTemplates() (string, []*chart.File) {
 	return manifest, templates
 }
 
-func populateDefaults(chartName, chartPath string) error {
+func populateDefaults(chartName, chartPath string, out io.Writer) error {
 	d := defaulter{
 		{
 			path: filepath.Join(chartPath, ChartFileName),
-			content: utils.Replacer(defaultChartfile, chartName, "<CHARTNAME>"),
+			content: utils.ReplaceStr(defaultChartfile, chartName, "<CHARTNAME>"),
 		},
 		{
 			path: filepath.Join(chartPath, ValuesFileName),
-			content: utils.Replacer(defaultValues, chartName, "<CHARTNAME>"),
+			content: utils.ReplaceStr(defaultValues, chartName, "<CHARTNAME>"),
 		},
 		{
 			path: filepath.Join(chartPath, HelpersFileName),
-			content: utils.Replacer(defaultHelpers, chartName, "<CHARTNAME>"),
+			content: utils.ReplaceStr(defaultHelpers, chartName, "<CHARTNAME>"),
 		},
 		{
 			path: filepath.Join(chartPath, IgnoreFileName),
@@ -159,7 +188,7 @@ func populateDefaults(chartName, chartPath string) error {
 
 	for _, f := range d {
 		if _, err := os.Stat(f.path); err == nil {
-			fmt.Fprintf(os.Stderr, "Warning: File %q already exist", f.path)
+			fmt.Fprintf(out, "Warning: File %q already exist Overwriting \n", f.path)
 		}
 		if err := utils.WriteToFile(f.content, f.path); err != nil {
 			return err

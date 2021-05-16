@@ -3,10 +3,10 @@ package utils
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
 	log "github.com/sirupsen/logrus"
 	"helm.sh/helm/v3/pkg/chartutil"
+	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -22,6 +22,7 @@ const (
 	DefaultPermission = 0755
 )
 
+//GetPrettyYaml generate a well formatted yaml file
 func GetPrettyYaml(obj interface{}) ([]byte, error) {
 	var prettyJSON bytes.Buffer
 	output, err := json.Marshal(obj)
@@ -36,6 +37,7 @@ func GetPrettyYaml(obj interface{}) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	return value, err
 }
 
@@ -50,7 +52,6 @@ func MergeMapsBytes(m1, m2 map[string][]byte) map[string][]byte{
 	return output
 }
 
-//TODO to be tested the returned error + Modify logging
 
 func CreateChartDirectory(name string) (string,error){
 	dir, err := os.Stat(name)
@@ -87,7 +88,7 @@ func ChartValidator(chart,release string) error {
 	return nil
 }
 
-func Replacer(src, newStr, old string) []byte {
+func ReplaceStr(src, newStr, old string) []byte {
 	return []byte(strings.ReplaceAll(src, old, newStr))
 }
 
@@ -121,31 +122,32 @@ func GetAllArgs(set []string) (map[string][]string,error) {
 
 func processingArgs(set []string, output map[string][]string) (map[string][]string, error) {
 	var list []string
-	//seen := make(map[string]struct{}, len(set))
 
 	for _, k := range set {
+
 		switch p := strings.Split(k,":"); {
+		case !strings.HasSuffix(p[0], "s"):
+			return nil, fmt.Errorf("resource %v must be plural", p[0])
 		case strings.Contains(p[1], ","):
 			e := strings.Split(p[1], ",")
-			j := 0
-
 			for _, i := range e {
-				//if _, ok := seen[i]; ok { // TODO BUGS here
-				//	continue
-				//}
-				//
-				//seen[i] = struct{}{}
 				list = append(list, i)
 				output[p[0]] = list
-				j++
 			}
 			list = nil
-		case !strings.ContainsAny(p[1], ","):
+		case !strings.Contains(p[1], ","):
 			output[p[0]] = []string{p[1]}
-		default:
-			return nil,errors.New("missing ',' between objects")
+
 		}
 	}
 
 	return output, nil
+}
+
+
+func DebugPrinter(format string, debug bool, out io.Writer ,v ...interface{}){
+	if debug {
+		format = fmt.Sprintf("[debug] %s\n", format)
+		fmt.Fprintf(out, fmt.Sprintf(format, v...))
+	}
 }

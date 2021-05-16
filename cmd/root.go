@@ -8,14 +8,11 @@ import (
 )
 
 const globalUsage = `
-Adopt k8s resources into a new helm chart
-
-Adopt expects to match plural resources kinds, at least one resource in the cluster.
+Adopt k8s resources into a new helm chart. It's expects to match plural resources kinds.
 `
 
 var Settings *EnvSettings
 
-//TODO add more info and enhance rootCmd
 
 func NewRootCmd(out io.Writer, args []string) *cobra.Command{
 	cmd := &cobra.Command{

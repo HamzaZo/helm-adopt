@@ -20,22 +20,6 @@ var (
 	f *unstructured.Unstructured
 )
 
-
-//TODO Next task - 0
-// TODO add helm plugin to fetch namespace auto : Done
-// TODO create release and set helm as ownership of resources : Done
-
-// TODO use releaseName validate release Name + use auto generate release
-// TODO Later Task - 1
-// TODO test with other resources cm,secrets,pv,pvc etc..
-// TODO clear clusterIps []string
-//TODO refactor this func it's too complicated :: using 4 for loop not a good idea
-
-// TODO Later Task - 2
-// TODO add templating
-// TODO create a fresh repo
-// TODO add Unit tests
-
 func (m MatchedResources) Query(client *ApiClient, namespace string) (map[string][]byte, error) {
 	var err error
 	result := make(map[string][]byte)
@@ -63,6 +47,7 @@ func (m MatchedResources) Query(client *ApiClient, namespace string) (map[string
 					if err != nil {
 						return nil, err
 					}
+
 					output, err := utils.GetPrettyYaml(f)
 					if err != nil {
 						return nil, err
@@ -82,10 +67,15 @@ func (m MatchedResources) Query(client *ApiClient, namespace string) (map[string
 func deepCleaning(obj *unstructured.Unstructured) error {
 	return func(f *unstructured.Unstructured) error {
 		utils.CommonCleaning(f)
+		err := utils.CleanSvc(f)
+		if err != nil {
+			return err
+		}
 		status, found, err := unstructured.NestedFieldNoCopy(f.Object, "status")
 		if err != nil {
 			return err
 		}
+
 		if found {
 			utils.CleanStatus(status.(map[string]interface{}))
 		}
@@ -108,7 +98,6 @@ func filteringProcess(gvrs map[schema.GroupVersion][]metav1.APIResource, namespa
 
 	for gv, resources := range gvrs {
 		for _, res := range resources {
-			// Get either namespaced or non-namespaced resources.
 			if namespaced != res.Namespaced {
 				continue
 			}
