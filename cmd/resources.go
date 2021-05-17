@@ -120,9 +120,9 @@ func runResources(args []string, out io.Writer) error{
 	return nil
 }
 
-//fetchResources get namespaced and non-namespaced resources.
+//fetchResources get namespaced and non-namespaced resources contents based on given input.
 func fetchResources(client *discovery.ApiClient, input map[string][]string) (map[string][]byte, error){
-	var output map[string][]byte
+	output := make(map[string][]byte)
 
 	namespaceResource, clusterResource ,err := discovery.FetchedFilteredResources(client, input)
 	if err != nil {

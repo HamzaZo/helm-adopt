@@ -21,6 +21,7 @@ var (
 	settings = cli.New()
 )
 
+//NewHelmClient holds a new helm client
 func NewHelmClient(kfcg KubConfigSetup, namespace string) (*ApiClient, error){
 	actionConfig := new(action.Configuration)
 

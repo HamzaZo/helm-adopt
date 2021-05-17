@@ -5,12 +5,14 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 )
 
+//CleanStatus omit status field
 func CleanStatus(m map[string]interface{}) {
 	for k := range m {
 		unstructured.RemoveNestedField(m, k)
 	}
 }
 
+//CleanSvc omit clusterIP/clusterIPs fields
 func CleanSvc(f *unstructured.Unstructured) error {
 	spec, found, err := unstructured.NestedFieldNoCopy(f.Object, "spec")
 	if err != nil {
@@ -28,6 +30,7 @@ func CleanSvc(f *unstructured.Unstructured) error {
 	return nil
 }
 
+//CommonCleaning omit unnecessary fields
 func CommonCleaning(f *unstructured.Unstructured){
 	var t metav1.Time
 	f.SetUID("")

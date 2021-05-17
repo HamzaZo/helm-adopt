@@ -13,7 +13,6 @@ Adopt k8s resources into a new helm chart. It's expects to match plural resource
 
 var Settings *EnvSettings
 
-
 func NewRootCmd(out io.Writer, args []string) *cobra.Command{
 	cmd := &cobra.Command{
 		Use: "adopt",

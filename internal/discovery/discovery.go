@@ -20,6 +20,7 @@ var (
 	f *unstructured.Unstructured
 )
 
+//Query will query given resources for both namespace or/and non-namespace
 func (m MatchedResources) Query(client *ApiClient, namespace string) (map[string][]byte, error) {
 	var err error
 	result := make(map[string][]byte)
@@ -64,6 +65,7 @@ func (m MatchedResources) Query(client *ApiClient, namespace string) (map[string
 
 }
 
+//deepCleaning clean unnecessary fields
 func deepCleaning(obj *unstructured.Unstructured) error {
 	return func(f *unstructured.Unstructured) error {
 		utils.CommonCleaning(f)
@@ -84,6 +86,7 @@ func deepCleaning(obj *unstructured.Unstructured) error {
 
 }
 
+//FetchedFilteredResources figure out which resources we want to query based on given resources
 func FetchedFilteredResources(client *ApiClient, wantResources map[string][]string) (namespaceResource, clusterResource *MatchedResources, err error) {
 	groupResources, err := getResources(client)
 	if err != nil {
@@ -92,6 +95,7 @@ func FetchedFilteredResources(client *ApiClient, wantResources map[string][]stri
 	return filteringProcess(groupResources, true, wantResources), filteringProcess(groupResources, false, wantResources), nil
 }
 
+//filteringProcess filter resources whether it's namespaced or non-namespaces resources
 func filteringProcess(gvrs map[schema.GroupVersion][]metav1.APIResource, namespaced bool, wantResources map[string][]string) *MatchedResources {
 	wR := make(map[string][]string)
 	result := make(map[bool][]schema.GroupVersionResource)
@@ -121,6 +125,7 @@ func filteringProcess(gvrs map[schema.GroupVersion][]metav1.APIResource, namespa
 	}
 }
 
+//getResources retrieve the supported resources with the version preferred by the server
 func getResources(client *ApiClient) (map[schema.GroupVersion][]metav1.APIResource, error) {
 
 	resourceLists, err := client.ClientSet.Discovery().ServerPreferredResources()
@@ -142,6 +147,7 @@ func getResources(client *ApiClient) (map[schema.GroupVersion][]metav1.APIResour
 	return versionResource, nil
 }
 
+//uniqResources skip duplicate resources
 func uniqResources(resources []metav1.APIResource) []metav1.APIResource {
 	seen := make(map[string]struct{}, len(resources))
 	i := 0
