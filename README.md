@@ -59,6 +59,7 @@ Use "adopt [command] --help" for more information about a command.
 
 #### adopt k8s resources
 ```
+$ helm adopt resources -h
 Adopt k8s resources into a new generated helm chart 
 
 Examples:
@@ -108,7 +109,7 @@ INFO[0000] Added resource as file services-1 into example chart
 INFO[0000] Chart example is released as example.1 
 ```
 
-*Note:* You must use a semicolon after each name `<pluralKind>:<name>,<name>,<name>` 
+**Note:** You must use a semicolon after each name `<pluralKind>:<name>,<name>,<name>` 
 if you need to adopt a bunch of resources under a specific `pluralKind` as shown in the example above.
 
 check the release status 
@@ -145,4 +146,4 @@ example
 
 ```
 
-*Hints:* To find out the plural resource for a specific kind use `kubectl api-resources`
+**Hints:** To find out the pluralKind for a specific kind use `kubectl api-resources`
