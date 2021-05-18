@@ -42,7 +42,7 @@ type defaulter []struct {
 	content []byte
 }
 
-
+//Generate adopt k8s resource and generate helm chart
 func (c Chart) Generate(client *discovery.ApiClient, out io.Writer, dryRun, debug bool) error{
 	log.Infof("Generating chart %s\n", c.ChartName)
 
@@ -59,6 +59,7 @@ func (c Chart) Generate(client *discovery.ApiClient, out io.Writer, dryRun, debu
 		return err
 	}
 	utils.DebugPrinter("CHART PATH: %s", debug, out ,name)
+
 	if err = os.MkdirAll(filepath.Join(name, ChartsDir), utils.DefaultPermission); err != nil {
 		return err
 	}
@@ -70,7 +71,6 @@ func (c Chart) Generate(client *discovery.ApiClient, out io.Writer, dryRun, debu
 
 	templateDir := filepath.Join(name, TemplatesDir)
 
-
 	for n, ct := range c.Content {
 		if _, err = os.Stat(filepath.Join(templateDir, n + ".yaml")); err == nil {
 			fmt.Fprintf(out, "WARNING: File %q already exists Overwriting.\n", name)
@@ -78,7 +78,7 @@ func (c Chart) Generate(client *discovery.ApiClient, out io.Writer, dryRun, debu
 		if err := utils.WriteToFile(ct, filepath.Join(templateDir, n + ".yaml")); err != nil {
 			return err
 		}
-		log.Infof("Added resouce as file %s into %s chart", n, c.ChartName)
+		log.Infof("Added resource as file %s into %s chart", n, c.ChartName)
 	}
 
 	err = c.createRelease(client, debug, out)
@@ -89,8 +89,10 @@ func (c Chart) Generate(client *discovery.ApiClient, out io.Writer, dryRun, debu
 	return nil
 }
 
+//createRelease create a helm release using secret driver
 func (c Chart) createRelease(client *discovery.ApiClient, debug bool, out io.Writer) error{
 	manifest, templates := c.addTemplates()
+
 	rel, err := c.buildRelease(templates, manifest, client.Namespace)
 	if err != nil {
 		return err
@@ -117,7 +119,6 @@ func (c Chart) createRelease(client *discovery.ApiClient, debug bool, out io.Wri
 	return nil
 }
 
-
 func (c Chart) buildRelease(template []*chart.File, manifest, namespace string) (*release.Release, error){
 
 	chartFile, err := chartutil.LoadChartfile(filepath.Join(c.ChartName, ChartFileName))
@@ -136,18 +137,17 @@ func (c Chart) buildRelease(template []*chart.File, manifest, namespace string) 
 		Description: "adopt k8s resources into helm chart",
 	}
 
-	rels := &release.Release{
+	return &release.Release{
 		Name: c.ReleaseName,
 		Info: info,
 		Chart: ch,
 		Manifest: manifest,
 		Version: 1,
 		Namespace: namespace,
-
-	}
-	return rels, err
+	}, nil
 
 }
+
 
 func (c Chart) addTemplates() (string, []*chart.File) {
 	var templates []*chart.File
@@ -161,7 +161,6 @@ func (c Chart) addTemplates() (string, []*chart.File) {
 		})
 		manifest += fmt.Sprintf("\n---\n# Source: %v\n%v", filename, string(content))
 	}
-
 
 	return manifest, templates
 }
