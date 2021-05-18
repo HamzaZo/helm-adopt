@@ -1,0 +1,16 @@
+name: adopt
+commands:
+  - name: resources
+    flags:
+      - c
+      - kube-context
+      - k
+      - kubeconfig
+      - n
+      - namespace
+      - o
+      - output
+      - r
+      - release
+      - dry-run
+      - debug
