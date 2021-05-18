@@ -36,7 +36,7 @@ Examples:
 
     $ %[1]s adopt resources statefulsets:nginx services:my-svc -r/--release RELEASE-NAME -o/--output frontend -c/--kube-context <ctx>
 
-    $ %[1]s adopt resources deployments:nginx services:my-svc -r/--release RELEASE-NAME -o/--output frontend -k/--kubeconfig <kcfg>
+    $ %[1]s adopt resources deployments:backend,frontend services:backend,frontend -o/--output api -k/--kubeconfig <kcfg>
 `
 
 func NewResourcesCmd(out io.Writer) *cobra.Command {
@@ -74,7 +74,6 @@ func (e *EnvSettings) AddFlags(fs *pflag.FlagSet) {
 	fs.StringVarP(&e.Namespace, "namespace", "n", e.Namespace, "namespace scope for this request")
 
 }
-
 
 //runResources adopt given k8s resources into a helm chart
 func runResources(args []string, out io.Writer) error{
