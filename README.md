@@ -57,7 +57,7 @@ Use "adopt [command] --help" for more information about a command.
 
 ```
 
-#### adopt k8s resources
+#### Adopt k8s resources
 ```
 $ helm adopt resources -h
 Adopt k8s resources into a new generated helm chart 
@@ -126,7 +126,8 @@ sh.helm.release.v1.example.v1   helm.sh/release.v1                    1      51s
 
 ```
 
-check generated chart directory
+check generated chart directory.
+
 ```
 $ tree example 
 example
@@ -143,7 +144,9 @@ example
 
 2 directories, 8 files
 
-
 ```
+Afterwards, you can edit the manifests in `example/templates` and turn them into templates and/or
+rework the generated chart into subcharts and then do a `helm upgrade` to fully transform the release.
+
 
 **Hints:** To find out the pluralKind for a specific kind use `kubectl api-resources`
