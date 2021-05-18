@@ -60,7 +60,7 @@ func NewResourcesCmd(out io.Writer) *cobra.Command {
 	cmd.MarkFlagRequired("output")
 	flags.StringVarP(&releaseName, "release", "r", "", "Specify the name for the generated release")
 	flags.BoolVar(&dryRun, "dry-run", false, "Print what resources will be adopted ")
-	flags.BoolVar(&debug, "debug", false, "Show the generated manifests on STDOUT")
+	flags.BoolVar(&debug, "debug-mode", false, "Show the generated manifests on STDOUT")
 
 	Settings.AddFlags(flags)
 
