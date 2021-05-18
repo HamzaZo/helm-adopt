@@ -13,7 +13,7 @@ you to :
 * adopt existing k8s resources by generating a helm chart 
 * migrate adopted resources to be controlled by helm  
 * create a helm release using secret as driver
-* perform a dry-run/debug (optional)
+* perform a dry-run/debug-mode (optional)
 
 *Note:* `adopt` does not re-create resources.
 
@@ -76,7 +76,7 @@ Usage:
   adopt resources <pluralKind>:<name> [flags]
 
 Flags:
-      --debug                 Show the generated manifests on STDOUT
+      --debug-mode            Show the generated manifests on STDOUT
       --dry-run               Print what resources will be adopted 
   -h, --help                  help for resources
   -c, --kube-context string   name of the kubeconfig context to use
