@@ -78,7 +78,7 @@ func (c Chart) Generate(client *discovery.ApiClient, out io.Writer, dryRun, debu
 		if err := utils.WriteToFile(ct, filepath.Join(templateDir, n + ".yaml")); err != nil {
 			return err
 		}
-		log.Infof("Added resouce as file %s into %s chart", n, c.ChartName)
+		log.Infof("Added resource as file %s into %s chart", n, c.ChartName)
 	}
 
 	err = c.createRelease(client, debug, out)
