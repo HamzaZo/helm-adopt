@@ -32,18 +32,18 @@ const (
 )
 
 type Chart struct {
-	ChartName string
+	ChartName   string
 	ReleaseName string
-	Content map[string][]byte
+	Content     map[string][]byte
 }
 
 type defaulter []struct {
-	path string
+	path    string
 	content []byte
 }
 
 //Generate adopt k8s resource and generate helm chart
-func (c Chart) Generate(client *discovery.ApiClient, out io.Writer, dryRun, debug bool) error{
+func (c Chart) Generate(client *discovery.ApiClient, out io.Writer, dryRun, debug bool) error {
 	log.Infof("Generating chart %s\n", c.ChartName)
 
 	if dryRun {
@@ -51,14 +51,14 @@ func (c Chart) Generate(client *discovery.ApiClient, out io.Writer, dryRun, debu
 		for n := range c.Content {
 			log.Infof("Added resouce as file %s into %s chart", n, c.ChartName)
 		}
-		log.Infof("Chart %s will be released as %v.1", c.ChartName, c.ReleaseName )
+		log.Infof("Chart %s will be released as %v.1", c.ChartName, c.ReleaseName)
 		return nil
 	}
 	name, err := utils.CreateChartDirectory(c.ChartName)
 	if err != nil {
 		return err
 	}
-	utils.DebugPrinter("CHART PATH: %s", debug, out ,name)
+	utils.DebugPrinter("CHART PATH: %s", debug, out, name)
 
 	if err = os.MkdirAll(filepath.Join(name, ChartsDir), utils.DefaultPermission); err != nil {
 		return err
@@ -72,10 +72,10 @@ func (c Chart) Generate(client *discovery.ApiClient, out io.Writer, dryRun, debu
 	templateDir := filepath.Join(name, TemplatesDir)
 
 	for n, ct := range c.Content {
-		if _, err = os.Stat(filepath.Join(templateDir, n + ".yaml")); err == nil {
+		if _, err = os.Stat(filepath.Join(templateDir, n+".yaml")); err == nil {
 			fmt.Fprintf(out, "WARNING: File %q already exists Overwriting.\n", name)
 		}
-		if err := utils.WriteToFile(ct, filepath.Join(templateDir, n + ".yaml")); err != nil {
+		if err := utils.WriteToFile(ct, filepath.Join(templateDir, n+".yaml")); err != nil {
 			return err
 		}
 		log.Infof("Added resource as file %s into %s chart", n, c.ChartName)
@@ -90,7 +90,7 @@ func (c Chart) Generate(client *discovery.ApiClient, out io.Writer, dryRun, debu
 }
 
 //createRelease create a helm release using secret driver
-func (c Chart) createRelease(client *discovery.ApiClient, debug bool, out io.Writer) error{
+func (c Chart) createRelease(client *discovery.ApiClient, debug bool, out io.Writer) error {
 	manifest, templates := c.addTemplates()
 
 	rel, err := c.buildRelease(templates, manifest, client.Namespace)
@@ -99,7 +99,7 @@ func (c Chart) createRelease(client *discovery.ApiClient, debug bool, out io.Wri
 	}
 	sec := driver.NewSecrets(client.ClientSet.CoreV1().Secrets(client.Namespace))
 	sec.Log = func(format string, v ...interface{}) {
-		log.Debug(fmt.Sprintf(format,v))
+		log.Debug(fmt.Sprintf(format, v))
 	}
 
 	releases := storage.Init(sec)
@@ -108,7 +108,7 @@ func (c Chart) createRelease(client *discovery.ApiClient, debug bool, out io.Wri
 	if err != nil {
 		return err
 	}
-	log.Infof("Chart %s is released as %v.1", c.ChartName, c.ReleaseName )
+	log.Infof("Chart %s is released as %v.1", c.ChartName, c.ReleaseName)
 
 	if debug {
 		utils.DebugPrinter("Adopting %v resource(s) into %s chart:", debug, out, len(templates), c.ChartName)
@@ -119,7 +119,7 @@ func (c Chart) createRelease(client *discovery.ApiClient, debug bool, out io.Wri
 	return nil
 }
 
-func (c Chart) buildRelease(template []*chart.File, manifest, namespace string) (*release.Release, error){
+func (c Chart) buildRelease(template []*chart.File, manifest, namespace string) (*release.Release, error) {
 
 	chartFile, err := chartutil.LoadChartfile(filepath.Join(c.ChartName, ChartFileName))
 	if err != nil {
@@ -127,27 +127,26 @@ func (c Chart) buildRelease(template []*chart.File, manifest, namespace string) 
 	}
 
 	ch := &chart.Chart{
-		Metadata: chartFile,
+		Metadata:  chartFile,
 		Templates: template,
 	}
 	info := &release.Info{
 		FirstDeployed: helmtime.Now(),
-		LastDeployed: helmtime.Now(),
-		Status: release.StatusDeployed,
-		Description: "adopt k8s resources into helm chart",
+		LastDeployed:  helmtime.Now(),
+		Status:        release.StatusDeployed,
+		Description:   "adopt k8s resources into helm chart",
 	}
 
 	return &release.Release{
-		Name: c.ReleaseName,
-		Info: info,
-		Chart: ch,
-		Manifest: manifest,
-		Version: 1,
+		Name:      c.ReleaseName,
+		Info:      info,
+		Chart:     ch,
+		Manifest:  manifest,
+		Version:   1,
 		Namespace: namespace,
 	}, nil
 
 }
-
 
 func (c Chart) addTemplates() (string, []*chart.File) {
 	var templates []*chart.File
@@ -168,19 +167,19 @@ func (c Chart) addTemplates() (string, []*chart.File) {
 func populateDefaults(chartName, chartPath string, out io.Writer) error {
 	d := defaulter{
 		{
-			path: filepath.Join(chartPath, ChartFileName),
+			path:    filepath.Join(chartPath, ChartFileName),
 			content: utils.ReplaceStr(defaultChartfile, chartName, "<CHARTNAME>"),
 		},
 		{
-			path: filepath.Join(chartPath, ValuesFileName),
+			path:    filepath.Join(chartPath, ValuesFileName),
 			content: utils.ReplaceStr(defaultValues, chartName, "<CHARTNAME>"),
 		},
 		{
-			path: filepath.Join(chartPath, HelpersFileName),
+			path:    filepath.Join(chartPath, HelpersFileName),
 			content: utils.ReplaceStr(defaultHelpers, chartName, "<CHARTNAME>"),
 		},
 		{
-			path: filepath.Join(chartPath, IgnoreFileName),
+			path:    filepath.Join(chartPath, IgnoreFileName),
 			content: []byte(defaultIgnore),
 		},
 	}

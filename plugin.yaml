@@ -1,5 +1,5 @@
 name: "adopt"
-version: "0.1.0"
+version: "0.3.0"
 usage: "Adopt k8s resources into a helm chart"
 description: "Adopt k8s resources into a helm chart"
 command: "$HELM_PLUGIN_DIR/bin/adopt"
