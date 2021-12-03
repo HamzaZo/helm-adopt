@@ -31,7 +31,7 @@ func CleanSvc(f *unstructured.Unstructured) error {
 }
 
 //CommonCleaning omit unnecessary fields
-func CommonCleaning(f *unstructured.Unstructured){
+func CommonCleaning(f *unstructured.Unstructured) {
 	var t metav1.Time
 	f.SetUID("")
 	f.SetResourceVersion("")

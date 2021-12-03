@@ -6,7 +6,7 @@ import (
 	"os"
 )
 
-func main(){
+func main() {
 	v := cmd.NewRootCmd(os.Stdout, os.Args[1:])
 	if err := v.Execute(); err != nil {
 		os.Exit(1)

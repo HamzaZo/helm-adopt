@@ -10,7 +10,6 @@ import (
 	"os"
 )
 
-
 type ApiClient struct {
 	DynClient dynamic.Interface
 	ClientSet kubernetes.Interface
@@ -22,18 +21,18 @@ var (
 )
 
 //NewHelmClient holds a new helm client
-func NewHelmClient(kfcg KubConfigSetup, namespace string) (*ApiClient, error){
+func NewHelmClient(kfcg KubConfigSetup, namespace string) (*ApiClient, error) {
 	actionConfig := new(action.Configuration)
 
 	settings.KubeContext = kfcg.Context
-	settings.KubeConfig  = kfcg.KubeConfigFile
+	settings.KubeConfig = kfcg.KubeConfigFile
 	if namespace == "" {
 		namespace = settings.Namespace()
 	} else {
 		kfcg.Namespace = settings.Namespace()
 	}
 	err := actionConfig.Init(settings.RESTClientGetter(), namespace, os.Getenv("HELM_DRIVER"), func(format string, v ...interface{}) {
-		log.Debug(fmt.Sprintf(format,v))
+		log.Debug(fmt.Sprintf(format, v))
 	})
 	if err != nil {
 		return nil, err

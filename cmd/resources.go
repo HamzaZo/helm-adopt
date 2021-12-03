@@ -13,10 +13,10 @@ import (
 )
 
 var (
-	chartDir string
+	chartDir    string
 	releaseName string
-	dryRun bool
-	debug bool
+	dryRun      bool
+	debug       bool
 )
 
 type EnvSettings struct {
@@ -41,18 +41,17 @@ Examples:
 
 func NewResourcesCmd(out io.Writer) *cobra.Command {
 	cmd := &cobra.Command{
-		Use: "resources <pluralKind>:<name>",
+		Use:   "resources <pluralKind>:<name>",
 		Short: "adopt k8s resources into a new generated helm chart",
-		Long: fmt.Sprintf(basicExample, "helm"),
+		Long:  fmt.Sprintf(basicExample, "helm"),
 		Args:  require.MinimumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			err := runResources(args, out)
-			if err != nil{
+			if err != nil {
 				return err
 			}
 			return nil
 		},
-
 	}
 	flags := cmd.Flags()
 
@@ -76,11 +75,11 @@ func (e *EnvSettings) AddFlags(fs *pflag.FlagSet) {
 }
 
 //runResources adopt given k8s resources into a helm chart
-func runResources(args []string, out io.Writer) error{
+func runResources(args []string, out io.Writer) error {
 	if releaseName == "" {
 		releaseName = "generated-release"
 	}
-	err := utils.ChartValidator(chartDir,releaseName)
+	err := utils.ChartValidator(chartDir, releaseName)
 	if err != nil {
 		return err
 	}
@@ -92,9 +91,9 @@ func runResources(args []string, out io.Writer) error{
 	}
 
 	kubeconfig := discovery.KubConfigSetup{
-		Context: Settings.KubeContext,
+		Context:        Settings.KubeContext,
 		KubeConfigFile: Settings.KubeConfigFile,
-		Namespace: Settings.Namespace,
+		Namespace:      Settings.Namespace,
 	}
 	helmClient, err := discovery.NewHelmClient(kubeconfig, kubeconfig.Namespace)
 	if err != nil {
@@ -106,9 +105,9 @@ func runResources(args []string, out io.Writer) error{
 		return err
 	}
 	chart := &generate.Chart{
-		ChartName: chartDir,
+		ChartName:   chartDir,
 		ReleaseName: releaseName,
-		Content: content,
+		Content:     content,
 	}
 
 	err = chart.Generate(helmClient, out, dryRun, debug)
@@ -120,20 +119,20 @@ func runResources(args []string, out io.Writer) error{
 }
 
 //fetchResources get namespaced and non-namespaced resources contents based on given input.
-func fetchResources(client *discovery.ApiClient, input map[string][]string) (map[string][]byte, error){
+func fetchResources(client *discovery.ApiClient, input map[string][]string) (map[string][]byte, error) {
 	output := make(map[string][]byte)
 
-	namespaceResource, clusterResource ,err := discovery.FetchedFilteredResources(client, input)
+	namespaceResource, clusterResource, err := discovery.FetchedFilteredResources(client, input)
 	if err != nil {
 		return nil, err
 	}
 
-	ns , err := namespaceResource.Query(client, client.Namespace)
+	ns, err := namespaceResource.Query(client, client.Namespace)
 	if err != nil {
 		return nil, err
 	}
 
-	cls , err := clusterResource.Query(client, "")
+	cls, err := clusterResource.Query(client, "")
 	if err != nil {
 		return nil, err
 	}

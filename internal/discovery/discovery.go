@@ -10,14 +10,14 @@ import (
 )
 
 type MatchedResources struct {
-	Gvr map[bool][]schema.GroupVersionResource
+	Gvr     map[bool][]schema.GroupVersionResource
 	WantRes map[string][]string
 }
 
 var (
 	selectedGVR []schema.GroupVersionResource
-	objects []string
-	f *unstructured.Unstructured
+	objects     []string
+	f           *unstructured.Unstructured
 )
 
 //Query will query given resources for both namespace or/and non-namespace
@@ -25,14 +25,14 @@ func (m MatchedResources) Query(client *ApiClient, namespace string) (map[string
 	var err error
 	result := make(map[string][]byte)
 
-	for res, object := range m.WantRes{
+	for res, object := range m.WantRes {
 		for namespaced, g := range m.Gvr {
 			for _, gvr := range g {
 				if res != gvr.Resource {
 					continue
 				}
 				j := 0
-				for _, k := range object{
+				for _, k := range object {
 					if namespaced {
 						f, err = client.DynClient.Resource(gvr).Namespace(namespace).Get(context.TODO(), k, metav1.GetOptions{})
 						if err != nil {
@@ -120,7 +120,7 @@ func filteringProcess(gvrs map[schema.GroupVersion][]metav1.APIResource, namespa
 	}
 	selectedGVR = nil
 	return &MatchedResources{
-		Gvr: result,
+		Gvr:     result,
 		WantRes: wR,
 	}
 }
@@ -138,7 +138,7 @@ func getResources(client *ApiClient) (map[schema.GroupVersion][]metav1.APIResour
 	for _, apiResourceList := range resourceLists {
 		version, err := schema.ParseGroupVersion(apiResourceList.GroupVersion)
 		if err != nil {
-			return nil, fmt.Errorf("unable to parse GroupVersion %v",err)
+			return nil, fmt.Errorf("unable to parse GroupVersion %v", err)
 		}
 
 		versionResource[version] = uniqResources(apiResourceList.APIResources)

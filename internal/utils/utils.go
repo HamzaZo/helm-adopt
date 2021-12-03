@@ -19,7 +19,7 @@ var chartName = regexp.MustCompile("^[a-zA-Z0-9._-]+$")
 
 const (
 	maxChartNameLength = 250
-	DefaultPermission = 0755
+	DefaultPermission  = 0755
 )
 
 //GetPrettyYaml generate a well formatted yaml file
@@ -41,7 +41,7 @@ func GetPrettyYaml(obj interface{}) ([]byte, error) {
 	return value, err
 }
 
-func MergeMapsBytes(m1, m2 map[string][]byte) map[string][]byte{
+func MergeMapsBytes(m1, m2 map[string][]byte) map[string][]byte {
 	output := make(map[string][]byte, len(m1))
 	for k, v := range m1 {
 		output[k] = v
@@ -52,33 +52,32 @@ func MergeMapsBytes(m1, m2 map[string][]byte) map[string][]byte{
 	return output
 }
 
-
-func CreateChartDirectory(name string) (string,error){
+func CreateChartDirectory(name string) (string, error) {
 	dir, err := os.Stat(name)
-	if os.IsNotExist(err){
+	if os.IsNotExist(err) {
 		err := os.Mkdir(name, DefaultPermission)
 		if err != nil {
 			log.Errorf("unable to create chart directory %v", err)
 			return "", err
 		}
 
-	} else if !dir.IsDir(){
+	} else if !dir.IsDir() {
 		log.Errorf("%s is not a directory", name)
 		return "", err
 	}
 	path, err := filepath.Abs(name)
 	if err != nil {
-		return "",err
+		return "", err
 	}
 
 	return path, err
 }
 
-func ChartValidator(chart,release string) error {
+func ChartValidator(chart, release string) error {
 	if chart == "" || len(chart) > maxChartNameLength {
 		return fmt.Errorf("chart name must be between 1 and %d characters", maxChartNameLength)
 	}
-	if !chartName.MatchString(chart){
+	if !chartName.MatchString(chart) {
 		return fmt.Errorf("chart name must match the regular expression %q", chartName.String())
 	}
 	err := chartutil.ValidateReleaseName(release)
@@ -92,7 +91,7 @@ func ReplaceStr(src, newStr, old string) []byte {
 	return []byte(strings.ReplaceAll(src, old, newStr))
 }
 
-func WriteToFile(content []byte, name string) error{
+func WriteToFile(content []byte, name string) error {
 	if err := os.MkdirAll(filepath.Dir(name), DefaultPermission); err != nil {
 		return err
 	}
@@ -102,14 +101,14 @@ func WriteToFile(content []byte, name string) error{
 	return nil
 }
 
-func Contains(m map[string][]string, val string) ([]string, bool){
+func Contains(m map[string][]string, val string) ([]string, bool) {
 	if value, ok := m[val]; ok {
 		return value, true
 	}
 	return nil, false
 }
 
-func GetAllArgs(set []string) (map[string][]string,error) {
+func GetAllArgs(set []string) (map[string][]string, error) {
 	m := make(map[string][]string)
 	return func() (map[string][]string, error) {
 		o, err := processingArgs(set, m)
@@ -125,7 +124,7 @@ func processingArgs(set []string, output map[string][]string) (map[string][]stri
 
 	for _, k := range set {
 
-		switch p := strings.Split(k,":"); {
+		switch p := strings.Split(k, ":"); {
 		case !strings.HasSuffix(p[0], "s"):
 			return nil, fmt.Errorf("resource %v must be plural", p[0])
 		case strings.Contains(p[1], ","):
@@ -144,8 +143,7 @@ func processingArgs(set []string, output map[string][]string) (map[string][]stri
 	return output, nil
 }
 
-
-func DebugPrinter(format string, debug bool, out io.Writer ,v ...interface{}){
+func DebugPrinter(format string, debug bool, out io.Writer, v ...interface{}) {
 	if debug {
 		format = fmt.Sprintf("[debug] %s\n", format)
 		fmt.Fprintf(out, fmt.Sprintf(format, v...))

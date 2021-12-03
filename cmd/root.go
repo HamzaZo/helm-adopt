@@ -13,11 +13,11 @@ Adopt k8s resources into a new helm chart. It's expected to match plural resourc
 
 var Settings *EnvSettings
 
-func NewRootCmd(out io.Writer, args []string) *cobra.Command{
+func NewRootCmd(out io.Writer, args []string) *cobra.Command {
 	cmd := &cobra.Command{
-		Use: "adopt",
-		Short: "adopt cluster resources into a new helm chart",
-		Long: globalUsage,
+		Use:          "adopt",
+		Short:        "adopt cluster resources into a new helm chart",
+		Long:         globalUsage,
 		SilenceUsage: true,
 		Args: func(cmd *cobra.Command, args []string) error {
 			if len(args) > 1 {
@@ -30,7 +30,7 @@ func NewRootCmd(out io.Writer, args []string) *cobra.Command{
 	flags.Parse(args)
 
 	Settings = new(EnvSettings)
-	if ctx := os.Getenv("HELM_KUBECONTEXT"); ctx != ""{
+	if ctx := os.Getenv("HELM_KUBECONTEXT"); ctx != "" {
 		Settings.KubeContext = ctx
 	}
 	cmd.AddCommand(NewResourcesCmd(out))
