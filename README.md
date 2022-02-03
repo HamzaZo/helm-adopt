@@ -8,8 +8,7 @@
 `helm-adopt` is a helm plugin to adopt existing k8s resources into a new generated helm chart, the idea behind the plugin
 was inspired by issue [2730](https://github.com/helm/helm/issues/2730). 
 
-the `adopt` plugin allows
-you to :
+`adopt` plugin allows you to :
 * adopt existing k8s resources by generating a helm chart 
 * migrate adopted resources to be controlled by helm  
 * create a helm release using secret as driver
@@ -31,7 +30,7 @@ $ helm plugin update adopt
 ```
 Install a specific version
 ```shell
-$ helm plugin install https://github.com/HamzaZo/helm-adopt --version 0.3.0
+$ helm plugin install https://github.com/HamzaZo/helm-adopt --version 0.3.1
 ```
 You can also verify it's been installed using
 ```shell
