@@ -124,7 +124,7 @@ func processingArgs(set []string, output map[string][]string) (map[string][]stri
 
 	for _, k := range set {
 
-		switch p := strings.Split(k, ":"); {
+		switch p := strings.SplitN(k, ":", 1); {
 		case !strings.HasSuffix(p[0], "s"):
 			return nil, fmt.Errorf("resource %v must be plural", p[0])
 		case strings.Contains(p[1], ","):
